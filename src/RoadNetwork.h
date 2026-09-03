@@ -7,65 +7,63 @@
 #include <map>
 #include <optional>
 
+typedef std::pair<int, int> Connection;
+typedef std::pair<Connection, Vector2> RoadPoint;
+
 enum RoadType {
 	ARTERIAL,
 	COLLECTOR,
 	LOCAL };
 
-
-struct Road {
-public:
-	typedef std::pair<std::pair<int, int>, Vector2> RoadPoint;
-	int lanes{ };
-	RoadType classification{ };
-
-	Road(int lane_count, RoadType classification); 
-	Road() = default;
-};
-
-class Intersection {
-public:
-	int ID{};
+struct Junction {
 	Vector2 pos{};
 
-	typedef std::map<int, Road> RoadMap;
-	RoadMap roads{};
+	Junction(Vector2 pos);
+	Junction() = default;
+};
 
-	Intersection(int ID, Vector2 pos);
-	Intersection() = default;
+class Road {
+public:
+	bool oneWay{};
+	RoadType type{};
 
-
+	Road(RoadType type, bool oneWay);
+	Road() = default;
 };
 
 class RoadNetwork {
 public:
 	RoadNetwork() = default;
 
-	void InputHandler(int laneCount, RoadType roadType);
-	void draw(Vector2 screenOrigin);
+	void designRoads(Vector2 mousePos, Road road);
+	void draw(Vector2 screenPos, float scale);
+	RoadType currentRoadType{ ARTERIAL };
 
 private:
-	typedef std::map<int, Intersection> IntersectionMap;
-	IntersectionMap map{ };
+	std::map<int, Junction> junctions{};
+	std::map<Connection, Road> roads{};
 
-	Vector2 roadStart{ };
-	int roadStartID{ 0 };
-	Intersection* currentTarget{ nullptr };
+	int roadStartID{};
+	bool creatingRoad{};
 
-	std::optional<int> intersectionTargetID;
-	std::optional<Road::RoadPoint> roadPoint;
+	int junctionMoveID{};
 
-	void evalTargets(Vector2 pos);
-	std::optional<int> getNearestIntersection(Vector2 pos, int maxDist);
-	std::optional<Road::RoadPoint> getNearestRoadPoint(Vector2 pos, float maxDist);
-	void addIntersectionToRoad(std::optional<Road::RoadPoint> roadPoint, int intersectionID);
-	void mergeIntersections(int ID1, int ID2);
+	std::optional<int> targetJunctionID;
+	std::optional<RoadPoint> targetRoadPoint;
 
-	std::optional<int> getNewID();
-	void addIntersection(int ID, Vector2 pos);
-	void removeIntersection(int ID);
-	void addRoad(int fromID, int toID, Road road);
+
+	int getNewID();
+	int createJunction(Vector2 pos);
+	void placeJunction(Vector2 mousePos, Road road);
+	void removeJunction(int ID);
+
+	std::optional<Road> getRoad(int fromID, int toID);
+	void createRoad(int fromID, int toID, Road road);
+	int bisectRoad(RoadPoint roadPoint);
 	void removeRoad(int fromID, int toID);
-};
 
+	std::optional<int> getNearbyJunction(Vector2 pos, float searchRadius);
+	std::optional<RoadPoint> getNearbyRoad(Vector2 pos, float searchRadius);
+
+};
 #endif
