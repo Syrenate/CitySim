@@ -7,42 +7,66 @@
 #include <map>
 #include <optional>
 
-typedef std::pair<int, int> Connection;
-typedef std::pair<Connection, Vector2> RoadPoint;
+enum ERROR {
+	DoesNotExist, 
+	MaxJunctions, 
+	SameRoad };
+
+enum Outcome {
+	Success,
+	JunctionCollision,
+	InvalidRoad };
+
 
 enum RoadType {
 	ARTERIAL,
 	COLLECTOR,
 	LOCAL };
 
+enum JunctionType {
+	ROUNDABOUT };
+
+typedef std::pair<int, int> Connection;
+typedef std::pair<Connection, Vector2> RoadPoint;
+
 namespace ROAD {
+	const inline float searchDist{ 10 };
+	const inline Color roadSelectionColor{ RED };
+	const inline Color roadPlanColor = (Color){ 100, 150, 95, 255 };
+	const inline std::map<RoadType, Color> roadColors{ {ARTERIAL, (Color){ 255,255,255,255 }},
+					      {COLLECTOR, (Color){ 160,160,160,255}},
+					      {LOCAL, (Color){100,100,100,255}} };
+	const inline std::map<RoadType, float> roadThickness{ {ARTERIAL, 7.0},
+					         {COLLECTOR, 5.0},
+					         {LOCAL, 3.0} };
+	const inline Color invalidColor{ RED };
+	const inline int snappingDivisions{ 32 };
+}
+
+
+namespace JUNCTION {
 	const inline int junctionRadius{ 8 };
 	const inline int searchDist{ 10 };
 
 	const inline Color junctionColor{ BLUE };
 	const inline Color junctionSelectionColor{ RAYWHITE };
 
-	const inline Color roadSelectionColor{ RED };
-	const inline Color roadPlanColor = (Color){ 100, 150, 95, 255 };
-	const inline std::map<RoadType, Color> roadColors{ {ARTERIAL, (Color){ 255,255,255,255 }},
-					      {COLLECTOR, (Color){ 160,160,160,255}},
-					      {LOCAL, (Color){100,100,100,255}} };
-
-	const inline std::map<RoadType, float> roadThickness{ {ARTERIAL, 7.0},
-					         {COLLECTOR, 5.0},
-					         {LOCAL, 3.0} };
+	const inline JunctionType defaultJunction{ ROUNDABOUT };
+	const inline std::map<JunctionType, float> sizes{ {ROUNDABOUT, 10} };
+	const inline std::map<JunctionType, Color> colors{ {ROUNDABOUT, BLUE} };
 }
 
-enum ERROR {
-	DoesNotExist, 
-	MaxJunctions };
+
 
 struct Junction {
 	Vector2 pos{};
-	float radius{};
+	JunctionType type{};
 
-	Junction(Vector2 pos, float radius);
+	Junction(Vector2 pos, JunctionType type);
 	Junction() = default;
+
+	float size() { return JUNCTION::sizes.at(type); }
+	Color color() { return JUNCTION::colors.at(type); }
 };
 
 class Road {
@@ -52,22 +76,30 @@ public:
 
 	Road(RoadType type, bool oneWay);
 	Road() = default;
+
+	float thickness() { return ROAD::roadThickness.at(type); }
+	Color color() { return ROAD::roadColors.at(type); }
 };
 
 class RoadNetwork {
 public:
 	RoadNetwork() = default;
 
-	void designRoads(Vector2 mousePos, Road road);
+	void designRoads(Vector2 mousePos);
 	void draw(Vector2 screenPos, float scale);
 	RoadType currentRoadType{ ARTERIAL };
+	JunctionType currentJunctionType{ ROUNDABOUT };
 
 private:
 	std::map<int, Junction> junctions{};
 	std::map<Connection, Road> roads{};
 
-	int roadStartID{};
+	bool isValidPlacement{ true };
+	Vector2 roadStart{};
+	std::optional<int> roadStartID{};
+	std::optional<RoadPoint> roadStartPoint{};
 	bool creatingRoad{};
+	bool isSnappingAngle{};
 
 	int junctionMoveID{};
 	std::optional<int> targetJunctionID;
@@ -79,19 +111,23 @@ private:
 
 	int getNewID();
 	std::optional<int> createJunction(Vector2 pos);
-	void placeJunction(Vector2 mousePos, Road road);
+	int placeJunction(Junction junction);
 	void removeJunction(int ID);
 
+	std::optional<int> getJunctionIntersection(Road road, Junction start, int startID, Junction end, int endID);
 	Road getRoad(int fromID, int toID);
-	void createRoad(int fromID, int toID, Road road);
-	std::optional<int> bisectRoad(RoadPoint roadPoint);
+	Outcome createRoad(Junction start, Junction end, Road road);
+	int bisectRoad(RoadPoint roadPoint);
 	void removeRoad(int fromID, int toID);
 
-	std::optional<int> getNearbyJunction(Vector2 pos, float searchRadius);
-	std::optional<RoadPoint> getNearbyRoad(Vector2 pos, float searchRadius);
+	std::optional<RoadPoint> getRoadCollision(Junction start, Junction end, Connection connection, Road road);
+	std::optional<RoadPoint> getNearestRoadCollision(Junction start, int startID, Junction end, int endID);
 
-	void drawRoad(Vector2 startPos, Vector2 endPos, Road road);
+	std::optional<int> getNearbyJunction(Vector2 pos);
+	std::optional<RoadPoint> getNearbyRoad(Vector2 pos);
+
+	void drawRoad(Connection connection, Road road);
 	void drawRoadTexture();
-	void drawUITexture();
+	void drawUITexture(Vector2 mousePos);
 };
 #endif

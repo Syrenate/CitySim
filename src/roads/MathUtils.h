@@ -7,6 +7,7 @@
 namespace VecMath {
 	Vector2 add(Vector2 v1, Vector2 v2);
 	Vector2 sub(Vector2 v1, Vector2 v2);
+	bool equal(Vector2 v1, Vector2 v2);
 
 	float length(Vector2 v);
 	Vector2 normalize(Vector2 v);
@@ -26,7 +27,7 @@ namespace VecMath {
 	float distance(Vector2 v1, Vector2 v2);
 	float distanceToSqr(Vector2 v1, Vector2 v2);
 
-
+	Vector2 snapPosition(Vector2 start, Vector2 end, int divisions);
 }
 
 #endif

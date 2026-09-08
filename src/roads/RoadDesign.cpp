@@ -1,48 +1,62 @@
-#include <cmath>
 #include <raylib.h>
 #include "RoadNetwork.h"
 #include "MathUtils.h"
 
-#include <vector>
 #include <iostream>
+#include <system_error>
 
-void RoadNetwork::designRoads(Vector2 mousePos, Road road) {
-	targetJunctionID = getNearbyJunction(mousePos, ROAD::searchDist);
-	targetRoadPoint = getNearbyRoad(mousePos, ROAD::searchDist);
+void RoadNetwork::designRoads(Vector2 mousePos) {
+	targetJunctionID = getNearbyJunction(mousePos);
+	targetRoadPoint = getNearbyRoad(mousePos);
 
 	bool hasRoadChanged{};
+
+	if (IsKeyPressed(KEY_S)) isSnappingAngle = !isSnappingAngle;
+	// if (IsKeyPressed(KEY_S)) isSnappingAngle = true;
+	// else if (IsKeyReleased(KEY_S)) isSnappingAngle = false;
+
 
 	if (IsKeyPressed(KEY_D) && targetJunctionID) {
 		removeJunction(*targetJunctionID);
 		hasRoadChanged = true;
 	}
-	
+
 	int LMB{ 0 };
 	int RMB{ 1 };
-	if (IsMouseButtonPressed(LMB)) {
-		creatingRoad = true;
 
-		if (targetJunctionID) 
-			roadStartID = *targetJunctionID;
-		else {
-			std::optional<int> newID{ targetRoadPoint ? bisectRoad(*targetRoadPoint) 
-								  : createJunction(mousePos) };
-			if (newID) roadStartID = *newID;
-			else creatingRoad = false;
+	if (IsMouseButtonPressed(LMB) && !creatingRoad) {
+		creatingRoad = true;
+		isValidPlacement = true;
+
+		if (targetJunctionID) {
+			roadStart = junctions.at(*targetJunctionID).pos;
+			roadStartID = targetJunctionID;
+		} else if (targetRoadPoint) {
+			roadStartPoint = targetRoadPoint;
+			roadStart = targetRoadPoint->second;
+		} else {
+			roadStart = mousePos; 
 		}
-		// else if (targetRoadPoint) {
-		// 	std::optional<int> newID{ bisectRoad(*targetRoadPoint) };
-		//
-		// } else {
-		// 	std::optional<int> newID{ createJunction(mousePos) };
-		//
-		// 	if (newID) roadStartID = *newID;
-		// 	else creatingRoad = false;
-		// }
 	} else if (IsMouseButtonReleased(LMB) && creatingRoad) {
-		placeJunction(mousePos, (Road){ currentRoadType, false });
-		hasRoadChanged = true; 
+		try {
+			Road currentRoad{ currentRoadType, false };
+
+			Vector2 snappedPos{ (isSnappingAngle) ? VecMath::snapPosition(roadStart, mousePos, ROAD::snappingDivisions) : mousePos };
+			Outcome result = createRoad( (Junction){ roadStart, currentJunctionType }, (Junction){ snappedPos, currentJunctionType}, currentRoad);
+
+			if (result == JunctionCollision) {
+				std::cout << "failed!";
+			}
+		} catch (ERROR) {
+			std::cout << "super failed!";
+		}
+
 		creatingRoad = false;
+		hasRoadChanged = true; 
+
+		roadStartID = {};
+		roadStart = {};
+		roadStartPoint = {};
 	}
 	
 	// if (IsMouseButtonDown(LMB)) hasRoadChanged = true;
@@ -64,7 +78,7 @@ void RoadNetwork::designRoads(Vector2 mousePos, Road road) {
 		hasRoadChanged = false;
 	}
 
-	drawUITexture();
+	drawUITexture(mousePos);
 	// DrawText(std::to_string(IsRenderTextureValid(roadTexture)).c_str(), 20, 20, 50, RED); 
 }
 

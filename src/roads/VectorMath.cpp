@@ -1,7 +1,12 @@
 #include <raylib.h>
 #include <cmath>
 #include <optional>
+#include <string>
+#include <iostream>
 #include "MathUtils.h"
+
+bool VecMath::equal(Vector2 v1, Vector2 v2) {
+	return (v1.x == v2.x && v1.y == v2.y); }
 
 float VecMath::distanceToSqr(Vector2 v1, Vector2 v2) {
 	return (v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y);
@@ -23,34 +28,9 @@ Vector2 VecMath::getIncidence(Vector2 from, Vector2 to, Vector2 pos) {
 }
 
 std::optional<Vector2> VecMath::getIntersection(Vector2 from1, Vector2 to1, Vector2 from2, Vector2 to2) {
-	if (from1.x == to1.x) {
-		if (from2.x == to2.x) return {};
-
-		float grad2{ VecMath::getGradient(from2, to2) };
-		float intercept2{ to2.y - grad2 * to2.x };
-
-		return Vector2{ from1.x, grad2 * from1.x + intercept2 };
-	} else if (from2.x == to2.x) {
-		if (from1.x == to1.x) return {};
-
-		float grad1{ VecMath::getGradient(from1, to1) };
-		float intercept1{ to1.y - grad1 * to1.x };
-
-		return Vector2{ from2.x, grad1 * from2.x + intercept1 };	
-	}
-
-	float grad1{ VecMath::getGradient(from1, to1) };
-	float grad2{ VecMath::getGradient(from2, to2) };
-
-	if (grad1 == grad2) return {};
-
-
-	float intercept1{ to1.y - grad1 * to1.x };
-	float intercept2{ to2.y - grad2 * to2.x };
-
-	float x0{ (intercept2 - intercept1) / (grad1 - grad2) };
-	float y0{ grad1 * x0 + intercept1 };
-	return Vector2{ x0, y0 };
+	Vector2 collision{};
+	CheckCollisionLines(from1, to1, from2, to2, &collision);
+	return collision;
 }
 
 float VecMath::dotProduct(Vector2 v1, Vector2 v2) {
@@ -70,6 +50,7 @@ bool VecMath::isOnLine(Vector2 v1, Vector2 v2, Vector2 pos) {
 	float grad{ getGradient(v1, v2) };
 	float intercept{ v1.y - grad * v1.x };
 
+	// return (isInBounds(v1,v2,pos) && CheckCollisionCircleLine(pos, 1, v1, v2));
 	return (isInBounds(v1,v2,pos) && pos.y == grad * pos.x + intercept);
 }
 
@@ -111,4 +92,17 @@ Vector2 VecMath::resize(Vector2 v, float length) {
 
 Vector2 VecMath::rotate(Vector2 v, float angle) {
 	return Vector2{ float(std::cos(angle)*v.x + sin(angle)*v.y), float(-sin(angle)*v.x + cos(angle)*v.y) };
+}
+
+Vector2 VecMath::snapPosition(Vector2 start, Vector2 end, int divisions) {
+	Vector2 vec{ VecMath::sub(end, start) };
+	double currentAngle{ atan(vec.y / vec.x) };
+
+	double correctAngle{ (vec.x == 0) ? (vec.y >= 0 ? PI/2 : -PI/2) :
+			     (vec.x < 0 && vec.y >= 0) ? -PI + currentAngle : 
+			     (vec.x < 0 && vec.y < 0) ? PI + currentAngle : currentAngle };
+	double roundedAngle{ 2*PI * round(divisions * correctAngle / (2*PI)) / divisions };
+
+	float length{ VecMath::length(vec) };
+	return Vector2{ float(start.x + length * cos(roundedAngle)), float(start.y + length * sin(roundedAngle)) };
 }
