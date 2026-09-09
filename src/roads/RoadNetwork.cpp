@@ -1,8 +1,8 @@
+#include <algorithm>
 #include <raylib.h>
 #include "RoadNetwork.h"
 #include "MathUtils.h"
 
-#include <numeric>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -14,6 +14,10 @@ Road::Road(RoadType type, bool oneWay) {
 
 
 std::optional<int> RoadNetwork::getJunctionIntersection(Road road, Junction start, int startID, Junction end, int endID) {
+	typedef std::pair<int, float> JunctionDistance;
+	std::vector<JunctionDistance> junctionTracker{};
+
+	float minDistance{ 99999999.0 };
 	for (auto& [ID, junction] : junctions) {
 		bool isStart{ (roadStartID && ID != *roadStartID) || !roadStartID };
 		if (ID != startID && ID != endID) {
@@ -21,11 +25,19 @@ std::optional<int> RoadNetwork::getJunctionIntersection(Road road, Junction star
 
 			if (VecMath::isNearLine(start.pos, end.pos, incidence)) {
 				float distanceToRoad{ VecMath::distance(junction.pos, incidence) };
-				if (distanceToRoad < junction.size() + std::max(start.size(), end.size())) return ID;
 
+				if (distanceToRoad < junction.size() + road.thickness()) {
+					float distToStart{ VecMath::distance(incidence, start.pos) };
+
+					junctionTracker.push_back( (JunctionDistance){ ID, distToStart } ); 
+					minDistance = std::min(distToStart, minDistance);
+				}
 			}
 		}
 	}
+
+	for (auto& [ID, dist] : junctionTracker) 
+		if (dist == minDistance) return ID;
 	 
 	return {};
 }
@@ -45,7 +57,6 @@ std::optional<RoadPoint> RoadNetwork::getRoadCollision(Junction start, Junction 
 
 	if (intercept && VecMath::isInBounds(fromPos, toPos, *intercept)
 		      && VecMath::isInBounds(start.pos, end.pos, *intercept)) {
-
 		RoadPoint newPoint{ (Connection){fromID, toID}, *intercept };
 		return newPoint;
 	}
@@ -91,26 +102,33 @@ Outcome RoadNetwork::createRoad(Junction start, Junction end, Road road) {
 	if (startIsEnd || junctionsTooClose) return Outcome::InvalidRoad;
 
 
-	int startID{ roadStartID ? *roadStartID : getNewID() };
-	int endID{ targetJunctionID ? *targetJunctionID : getNewID() };
-
-
-
+	int startID{ getNewID() };
 	if (roadStartID) startID = *roadStartID;
 	else if (roadStartPoint) startID = bisectRoad(*roadStartPoint);
 	else junctions[startID] = start;
 
+	int endID{ targetJunctionID ? *targetJunctionID : getNewID() };
+	end.pos = targetJunctionID ? junctions.at(*targetJunctionID).pos : 
+		 targetRoadPoint ? targetRoadPoint->second : end.pos;
 
-	std::optional<RoadPoint> collision{ getNearestRoadCollision(start, startID, end, endID) };
 	std::optional<int> intersectionID{ getJunctionIntersection(road, start, startID, end, endID) };
+	std::optional<RoadPoint> collision{ getNearestRoadCollision(start, startID, end, endID) };
 
 	if (intersectionID) end.pos = junctions.at(*intersectionID).pos; 
-	else if (collision) {
-		end.pos = collision->second;
-	}
+	else if (collision) end.pos = collision->second;
+	
 
 	targetJunctionID = getNearbyJunction(end.pos);
-	if (targetJunctionID) end.pos = junctions.at(*targetJunctionID).pos;
+	if (targetJunctionID) {
+		endID = *targetJunctionID;
+		end.pos = junctions.at(endID).pos;
+	}
+
+	for (auto& [ID, junction] : junctions) {
+		if (ID != startID && ID != endID && CheckCollisionCircleLine(junction.pos, junction.size() + road.thickness(), start.pos, end.pos)) {
+			return Outcome::InvalidRoad;
+		} }
+
 
 	if (targetJunctionID) endID = *targetJunctionID;
 	else if (collision) endID = bisectRoad(*collision);
@@ -125,7 +143,8 @@ Outcome RoadNetwork::createRoad(Junction start, Junction end, Road road) {
 }
 
 
-void RoadNetwork::removeRoad(int fromID, int toID) {
+void RoadNetwork::removeRoad(Connection connection) {
+	auto [fromID, toID] = connection;
 	int roadIndex{};
 	for (const auto& [connection, road] : roads) {
 		auto [from, to] = connection;
@@ -155,7 +174,7 @@ int RoadNetwork::bisectRoad(RoadPoint roadPoint) {
 	auto [fromID, toID] = connection;
 	Road oldRoad{ getRoad(fromID, toID) };
 
-	removeRoad(fromID, toID);
+	removeRoad(connection);
 	roads[(Connection){fromID,newID}] = oldRoad;
 	roads[(Connection){newID,toID}] = oldRoad;
 

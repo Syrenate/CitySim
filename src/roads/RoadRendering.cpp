@@ -23,7 +23,7 @@ void RoadNetwork::drawRoad(Connection connection, Road road) {//Vector2 startPos
 	auto [fromID, toID] = connection;
 	Junction from{ junctions.at(fromID) };
 	Junction to{ junctions.at(toID) };
-	DrawLineEx(from.pos, to.pos, road.thickness(), road.color());
+	DrawLineEx(from.pos, to.pos, road.thickness() * 2, road.color());
 	// DrawCircleV(from.pos, from.size(), from.color());
 	// DrawCircleV(to.pos, to.size(), to.color());//, JUNCTION::junctionColor);
 }
@@ -34,6 +34,7 @@ void RoadNetwork::drawUITexture(Vector2 mousePos) {
 	BeginTextureMode(uiTexture);
 		ClearBackground( (Color){ 0,0,0,0 } );
 	
+		bool foundNewJunction{};
 		if (creatingRoad) {
 			if (!roadStartID) DrawCircleV(roadStart, JUNCTION::sizes.at(currentJunctionType), JUNCTION::colors.at(currentJunctionType)); 
 
@@ -49,13 +50,41 @@ void RoadNetwork::drawUITexture(Vector2 mousePos) {
 
 			std::optional<RoadPoint> intercept{ getNearestRoadCollision(start, startID, end, endID) };
 			std::optional<int> intersectionID{ getJunctionIntersection(currentRoad, start, startID, end, endID) };
-			if (intercept) end.pos = intercept->second;
-			else if (intersectionID) end.pos = junctions.at(*intersectionID).pos;
 
-			targetJunctionID = getNearbyJunction(end.pos);
-			if (targetJunctionID) end.pos = junctions.at(*targetJunctionID).pos;
+			if (intercept){
+				auto [connection, interceptPos] = *intercept;
+				auto [fromID, toID] = connection;
+				end.pos = interceptPos;
+			} else if (intersectionID) {
+				endID = *intersectionID;
+				end.pos = junctions.at(endID).pos;
+			}
 
-			DrawLineEx(roadStart, end.pos, currentRoad.thickness(), currentRoad.color());
+			std::optional<int> newTargetJunctionID{ getNearbyJunction(end.pos) };
+			if (newTargetJunctionID) {
+				foundNewJunction = true;
+
+				endID = *newTargetJunctionID;
+				end.pos = junctions.at(endID).pos;
+
+				Vector2 pos{ junctions.at(endID).pos };
+				DrawCircleLinesV(pos, JUNCTION::searchDist, JUNCTION::junctionSelectionColor); 
+			}
+
+			// targetJunctionID = getNearbyJunction(end.pos);
+			// if (targetJunctionID) end.pos = junctions.at(*targetJunctionID).pos;
+
+			bool collidesWithJunction{};
+			for (auto& [ID, junction] : junctions) {
+				if (ID != startID && ID != endID && CheckCollisionCircleLine(junction.pos, junction.size() + currentRoad.thickness(), start.pos, end.pos)) {
+					collidesWithJunction = true;
+					break;
+				} }
+
+			Color roadColor{ collidesWithJunction ? ROAD::invalidColor : currentRoad.color() };
+
+
+			DrawLineEx(roadStart, end.pos, currentRoad.thickness()*2, roadColor);
 			DrawCircleV(end.pos, end.size(), end.color());
 			// if (intercept) {
 			// 	DrawCircle(100, 100, 100, GREEN);
@@ -68,10 +97,10 @@ void RoadNetwork::drawUITexture(Vector2 mousePos) {
 
 		}
 
-		if (targetJunctionID) {
+		if (targetJunctionID && !foundNewJunction) {
 			Vector2 pos{ junctions.at(*targetJunctionID).pos };
-			DrawCircleLinesV(pos, JUNCTION::searchDist, JUNCTION::junctionSelectionColor);
-		} else if (targetRoadPoint) {
+			DrawCircleLinesV(pos, JUNCTION::searchDist, JUNCTION::junctionSelectionColor); 
+		} else if (targetRoadPoint && !foundNewJunction) {
 			DrawCircle(10,10,10,GREEN);
 			auto [_, pos] = *targetRoadPoint;
 			DrawCircleV(pos, JUNCTION::sizes.at(currentJunctionType), ROAD::roadSelectionColor);

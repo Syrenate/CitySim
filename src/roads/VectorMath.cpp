@@ -17,6 +17,9 @@ float VecMath::getGradient(Vector2 from, Vector2 to) {
 }
 
 Vector2 VecMath::getIncidence(Vector2 from, Vector2 to, Vector2 pos) {
+	if (from.x == to.x) return Vector2{ from.x, pos.y };
+	if (from.y == to.y) return Vector2{ pos.x, from.y };
+
 	float gradient{ VecMath::getGradient(from, to) };
 	float intercept1{ from.y - gradient * from.x };
 	float intercept2{ pos.y + pos.x / gradient };
@@ -58,8 +61,9 @@ bool VecMath::isInBounds(Vector2 v1, Vector2 v2, Vector2 pos) {
 	Vector2 xBounds{ std::min(v1.x, v2.x), std::max(v1.x, v2.x) };
 	Vector2 yBounds{ std::min(v1.y, v2.y), std::max(v1.y, v2.y) };
 
-	return (pos.x >= xBounds.x) && (pos.x <= xBounds.y) &&
-	       (pos.y >= yBounds.x) && (pos.y <= yBounds.y);
+	float buffer{ 0.5 };
+	return (pos.x >= xBounds.x - buffer) && (pos.x <= xBounds.y + buffer) &&
+	       (pos.y >= yBounds.x - buffer) && (pos.y <= yBounds.y + buffer);
 }
 
 float VecMath::distance(Vector2 v1, Vector2 v2) {
@@ -104,5 +108,6 @@ Vector2 VecMath::snapPosition(Vector2 start, Vector2 end, int divisions) {
 	double roundedAngle{ 2*PI * round(divisions * correctAngle / (2*PI)) / divisions };
 
 	float length{ VecMath::length(vec) };
-	return Vector2{ float(start.x + length * cos(roundedAngle)), float(start.y + length * sin(roundedAngle)) };
+	return Vector2{ float(round(start.x + length * cos(roundedAngle))), 
+			float(round(start.y + length * sin(roundedAngle))) };
 }

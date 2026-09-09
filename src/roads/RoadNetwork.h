@@ -36,9 +36,9 @@ namespace ROAD {
 	const inline std::map<RoadType, Color> roadColors{ {ARTERIAL, (Color){ 255,255,255,255 }},
 					      {COLLECTOR, (Color){ 160,160,160,255}},
 					      {LOCAL, (Color){100,100,100,255}} };
-	const inline std::map<RoadType, float> roadThickness{ {ARTERIAL, 7.0},
-					         {COLLECTOR, 5.0},
-					         {LOCAL, 3.0} };
+	const inline std::map<RoadType, float> roadThickness{ {ARTERIAL, 3.5},
+					         {COLLECTOR, 2.5},
+					         {LOCAL, 1.5} };
 	const inline Color invalidColor{ RED };
 	const inline int snappingDivisions{ 32 };
 }
@@ -118,7 +118,7 @@ private:
 	Road getRoad(int fromID, int toID);
 	Outcome createRoad(Junction start, Junction end, Road road);
 	int bisectRoad(RoadPoint roadPoint);
-	void removeRoad(int fromID, int toID);
+	void removeRoad(Connection connection);
 
 	std::optional<RoadPoint> getRoadCollision(Junction start, Junction end, Connection connection, Road road);
 	std::optional<RoadPoint> getNearestRoadCollision(Junction start, int startID, Junction end, int endID);

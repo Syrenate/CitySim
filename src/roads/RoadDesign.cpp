@@ -3,7 +3,6 @@
 #include "MathUtils.h"
 
 #include <iostream>
-#include <system_error>
 
 void RoadNetwork::designRoads(Vector2 mousePos) {
 	targetJunctionID = getNearbyJunction(mousePos);
@@ -12,14 +11,20 @@ void RoadNetwork::designRoads(Vector2 mousePos) {
 	bool hasRoadChanged{};
 
 	if (IsKeyPressed(KEY_S)) isSnappingAngle = !isSnappingAngle;
-	// if (IsKeyPressed(KEY_S)) isSnappingAngle = true;
-	// else if (IsKeyReleased(KEY_S)) isSnappingAngle = false;
 
-
-	if (IsKeyPressed(KEY_D) && targetJunctionID) {
-		removeJunction(*targetJunctionID);
+	if (IsKeyPressed(KEY_D)) {
+		if (targetJunctionID) removeJunction(*targetJunctionID);
+		else if (targetRoadPoint) {
+			auto [connection, _] = *targetRoadPoint;
+			removeRoad(connection);
+		}
 		hasRoadChanged = true;
 	}
+
+	if (IsKeyPressed(KEY_A)) currentRoadType = ARTERIAL;
+	else if (IsKeyPressed(KEY_C)) currentRoadType = COLLECTOR;
+	else if (IsKeyPressed(KEY_L)) currentRoadType = LOCAL;
+
 
 	int LMB{ 0 };
 	int RMB{ 1 };

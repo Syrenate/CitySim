@@ -39,8 +39,7 @@ void RoadNetwork::removeJunction(int ID) {
 			connectionsToRemove.push_back(connection);
 	}
 
-	for (auto connection : connectionsToRemove) 
-		removeRoad(connection.first, connection.second);
+	for (auto connection : connectionsToRemove) removeRoad(connection);
 
 	auto it = junctions.find(ID);
 	if (it != junctions.end()) {
