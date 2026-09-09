@@ -29,7 +29,7 @@ void RoadNetwork::designRoads(Vector2 mousePos) {
 	int LMB{ 0 };
 	int RMB{ 1 };
 
-	if (IsMouseButtonPressed(LMB) && !creatingRoad) {
+	if (IsMouseButtonPressed(LMB) && !creatingRoad && !hasRoadChanged) {
 		creatingRoad = true;
 		isValidPlacement = true;
 
@@ -42,7 +42,7 @@ void RoadNetwork::designRoads(Vector2 mousePos) {
 		} else {
 			roadStart = mousePos; 
 		}
-	} else if (IsMouseButtonReleased(LMB) && creatingRoad) {
+	} else if (IsMouseButtonReleased(LMB) && creatingRoad && !hasRoadChanged) {
 		try {
 			Road currentRoad{ currentRoadType, false };
 

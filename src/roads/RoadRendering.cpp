@@ -51,14 +51,15 @@ void RoadNetwork::drawUITexture(Vector2 mousePos) {
 			std::optional<RoadPoint> intercept{ getNearestRoadCollision(start, startID, end, endID) };
 			std::optional<int> intersectionID{ getJunctionIntersection(currentRoad, start, startID, end, endID) };
 
-			if (intercept){
+			if (intercept) {
 				auto [connection, interceptPos] = *intercept;
 				auto [fromID, toID] = connection;
 				end.pos = interceptPos;
-			} else if (intersectionID) {
+			}
+			else if (intersectionID) {
 				endID = *intersectionID;
 				end.pos = junctions.at(endID).pos;
-			}
+			} 
 
 			std::optional<int> newTargetJunctionID{ getNearbyJunction(end.pos) };
 			if (newTargetJunctionID) {
@@ -80,8 +81,16 @@ void RoadNetwork::drawUITexture(Vector2 mousePos) {
 					collidesWithJunction = true;
 					break;
 				} }
+			bool collidesWithRoad{};
+			// for (auto& [connection, road] : roads) {
+			// 	auto [fromID, toID] = connection;
+			// 	if (fromID != startID && fromID != endID && toID != startID && toID != endID && CheckCollisionLines(start.pos, end.pos, junctions.at(fromID).pos, junctions.at(toID).pos, nullptr)) {
+			// 		collidesWithRoad = true;
+			// 		break;
+			// 	}
+			// }
 
-			Color roadColor{ collidesWithJunction ? ROAD::invalidColor : currentRoad.color() };
+			Color roadColor{ collidesWithJunction || collidesWithRoad ? ROAD::invalidColor : currentRoad.color() };
 
 
 			DrawLineEx(roadStart, end.pos, currentRoad.thickness()*2, roadColor);

@@ -114,13 +114,15 @@ Outcome RoadNetwork::createRoad(Junction start, Junction end, Road road) {
 	std::optional<int> intersectionID{ getJunctionIntersection(road, start, startID, end, endID) };
 	std::optional<RoadPoint> collision{ getNearestRoadCollision(start, startID, end, endID) };
 
-	if (intersectionID) end.pos = junctions.at(*intersectionID).pos; 
-	else if (collision) end.pos = collision->second;
+	if (collision) end.pos = collision->second;
+	else if (intersectionID) end.pos = junctions.at(*intersectionID).pos; 
 	
 
-	targetJunctionID = getNearbyJunction(end.pos);
-	if (targetJunctionID) {
-		endID = *targetJunctionID;
+	std::optional<int> newTargetJunctionID = getNearbyJunction(end.pos);
+	bool foundNewJunction{};
+	if (newTargetJunctionID) {
+		foundNewJunction = true;
+		endID = *newTargetJunctionID;
 		end.pos = junctions.at(endID).pos;
 	}
 
@@ -130,10 +132,12 @@ Outcome RoadNetwork::createRoad(Junction start, Junction end, Road road) {
 		} }
 
 
-	if (targetJunctionID) endID = *targetJunctionID;
-	else if (collision) endID = bisectRoad(*collision);
-	else if (targetRoadPoint) endID = bisectRoad(*targetRoadPoint);
-	else junctions[endID] = end;
+	if (!foundNewJunction) {
+		if (collision) endID = bisectRoad(*collision);
+		else if (newTargetJunctionID) endID = *newTargetJunctionID;
+		else if (targetRoadPoint) endID = bisectRoad(*targetRoadPoint);
+		else junctions[endID] = end;
+	}
 	
 
 	Connection newConnect{ startID, endID };
