@@ -33,7 +33,8 @@ void RoadNetwork::drawUITexture(Vector2 mousePos) {
 	BeginTextureMode(uiTexture);
 
 	ClearBackground( (Color){ 0,0,0,0 } );
-	DrawRectangleLinesEx((Rectangle){ 0, 0, worldSize.x, worldSize.y}, 20, GRAY);
+	// Debug World border
+	// DrawRectangleLinesEx((Rectangle){ 0, 0, worldSize.x, worldSize.y}, 20, GRAY);
 
 	bool foundNewJunction{};
 	if (creatingRoad) {

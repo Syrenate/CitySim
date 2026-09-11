@@ -1,6 +1,7 @@
 add_library(sim_lib
 	Simulation.h
 	Simulation.cpp
+	Camera.cpp
 )
 
 target_include_directories(sim_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

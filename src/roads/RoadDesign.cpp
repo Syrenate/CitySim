@@ -13,7 +13,7 @@ void RoadNetwork::designRoads(Vector2 mousePos) {
 
 		if (IsKeyPressed(KEY_S)) isSnappingAngle = !isSnappingAngle;
 
-		if (IsKeyPressed(KEY_D)) {
+		if (IsKeyDown(KEY_D)) {
 			if (targetJunctionID) removeJunction(*targetJunctionID);
 			else if (targetRoadPoint) {
 				auto [connection, _] = *targetRoadPoint;

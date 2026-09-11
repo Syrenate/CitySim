@@ -1,2 +1,0 @@
-/usr/bin/ar qc libsim_lib.a CMakeFiles/sim_lib.dir/Simulation.cpp.o CMakeFiles/sim_lib.dir/Camera.cpp.o
-/usr/bin/ranlib libsim_lib.a

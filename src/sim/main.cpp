@@ -7,8 +7,8 @@
 int main() {
 	Vector2 worldSize{ 3000, 3000 };
 	Vector2 screenSize{ 1920, 1080 };
+
 	Simulation simulation{worldSize, screenSize, 60};
-	// simulation.initRoads();
 
 	simulation.run();
 

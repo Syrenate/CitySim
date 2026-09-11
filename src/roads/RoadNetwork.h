@@ -91,6 +91,9 @@ public:
 	RoadType currentRoadType{ ARTERIAL };
 	JunctionType currentJunctionType{ ROUNDABOUT };
 
+	RenderTexture2D roadTexture;
+	RenderTexture2D uiTexture;
+
 private:
 	Vector2 worldSize;
 	std::map<int, Junction> junctions{};
@@ -106,9 +109,6 @@ private:
 	int junctionMoveID{};
 	std::optional<int> targetJunctionID;
 	std::optional<RoadPoint> targetRoadPoint;
-
-	RenderTexture2D roadTexture;
-	RenderTexture2D uiTexture = LoadRenderTexture(1920, 1080);
 
 
 	int getNewID();
