@@ -83,7 +83,8 @@ float VecMath::length(Vector2 v) {
 
 Vector2 VecMath::normalize(Vector2 v) {
 	float length{ VecMath::length(v) };
-	return Vector2{ v.x / length, v.y / length };
+	if (length > 0) return Vector2{ v.x / length, v.y / length };
+	else return Vector2{ 0,0 };
 }
 
 Vector2 VecMath::scale(Vector2 v, float scaleFactor) {

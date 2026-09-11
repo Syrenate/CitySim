@@ -21,8 +21,9 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 endif()
 
 add_subdirectory(src/roads)
+add_subdirectory(src/sim)
 
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/roads/main.cpp)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/sim/main.cpp)
 #set(raylib_VERBOSE 1)
-target_link_libraries(${PROJECT_NAME} PRIVATE road_lib raylib)
+target_link_libraries(${PROJECT_NAME} PRIVATE sim_lib road_lib raylib)
 

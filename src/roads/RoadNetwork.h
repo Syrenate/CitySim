@@ -83,14 +83,16 @@ public:
 
 class RoadNetwork {
 public:
-	RoadNetwork() = default;
+	RoadNetwork(Vector2 worldSize);
 
 	void designRoads(Vector2 mousePos);
-	void draw(Vector2 screenPos, float scale);
+	void draw(Rectangle srcRec, Rectangle viewport);
+
 	RoadType currentRoadType{ ARTERIAL };
 	JunctionType currentJunctionType{ ROUNDABOUT };
 
 private:
+	Vector2 worldSize;
 	std::map<int, Junction> junctions{};
 	std::map<Connection, Road> roads{};
 
@@ -105,7 +107,7 @@ private:
 	std::optional<int> targetJunctionID;
 	std::optional<RoadPoint> targetRoadPoint;
 
-	RenderTexture2D roadTexture = LoadRenderTexture(1920, 1080);
+	RenderTexture2D roadTexture;
 	RenderTexture2D uiTexture = LoadRenderTexture(1920, 1080);
 
 

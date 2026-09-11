@@ -1,2 +1,0 @@
-/usr/bin/ar qc libroad_lib.a CMakeFiles/road_lib.dir/VectorMath.cpp.o CMakeFiles/road_lib.dir/RoadDesign.cpp.o CMakeFiles/road_lib.dir/RoadNetwork.cpp.o CMakeFiles/road_lib.dir/RoadRendering.cpp.o CMakeFiles/road_lib.dir/JunctionDesign.cpp.o CMakeFiles/road_lib.dir/main.cpp.o
-/usr/bin/ranlib libroad_lib.a

@@ -7,11 +7,17 @@
 #include <map>
 #include <vector>
 #include <optional>
+#include <cmath>
 
 Road::Road(RoadType type, bool oneWay) {
 	this->type = type;
 	this->oneWay = oneWay; }
 
+RoadNetwork::RoadNetwork(Vector2 worldSize) {
+	roadTexture = LoadRenderTexture(round(worldSize.x), round(worldSize.y));
+	uiTexture = LoadRenderTexture(round(worldSize.x), round(worldSize.y));
+	this->worldSize = worldSize;
+}
 
 std::optional<int> RoadNetwork::getJunctionIntersection(Road road, Junction start, int startID, Junction end, int endID) {
 	typedef std::pair<int, float> JunctionDistance;
